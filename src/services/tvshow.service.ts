@@ -1,25 +1,48 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTVShowDto } from './dto/create-tvshow.dto';
-import { UpdateTVShowDto } from './dto/update-tvshow.dto';
+import { createError } from '../middleware/error.middleware';
 
-@Injectable()
+export interface CreateTVShowData {
+  title: string;
+  description: string;
+  firstAired: string;
+  totalSeasons: number;
+  totalEpisodes: number;
+  genre: string[];
+  posterUrl: string;
+  trailerUrl?: string;
+  status: string;
+  network: string;
+}
+
+export interface UpdateTVShowData {
+  title?: string;
+  description?: string;
+  firstAired?: string;
+  totalSeasons?: number;
+  totalEpisodes?: number;
+  genre?: string[];
+  posterUrl?: string;
+  trailerUrl?: string;
+  status?: string;
+  network?: string;
+}
+
 export class TVShowService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createTVShowDto: CreateTVShowDto) {
+  async create(createTVShowData: CreateTVShowData) {
     const tvShow = await this.prisma.tVShow.create({
       data: {
-        title: createTVShowDto.title,
-        description: createTVShowDto.description,
-        firstAired: new Date(createTVShowDto.firstAired),
-        totalSeasons: createTVShowDto.totalSeasons,
-        totalEpisodes: createTVShowDto.totalEpisodes,
-        genre: createTVShowDto.genre,
-        posterUrl: createTVShowDto.posterUrl,
-        trailerUrl: createTVShowDto.trailerUrl,
-        status: createTVShowDto.status,
-        network: createTVShowDto.network,
+        title: createTVShowData.title,
+        description: createTVShowData.description,
+        firstAired: new Date(createTVShowData.firstAired),
+        totalSeasons: createTVShowData.totalSeasons,
+        totalEpisodes: createTVShowData.totalEpisodes,
+        genre: createTVShowData.genre,
+        posterUrl: createTVShowData.posterUrl,
+        trailerUrl: createTVShowData.trailerUrl,
+        status: createTVShowData.status,
+        network: createTVShowData.network,
       },
     });
 
@@ -51,7 +74,7 @@ export class TVShowService {
     });
 
     if (!tvShow) {
-      throw new NotFoundException(`TV Show with ID ${id} not found`);
+      throw createError(`TV Show with ID ${id} not found`, 404);
     }
 
     return {
@@ -61,34 +84,34 @@ export class TVShowService {
     };
   }
 
-  async update(id: number, updateTVShowDto: UpdateTVShowDto) {
+  async update(id: number, updateTVShowData: UpdateTVShowData) {
     // Check if TV show exists
     const existingTVShow = await this.prisma.tVShow.findUnique({
       where: { id },
     });
 
     if (!existingTVShow) {
-      throw new NotFoundException(`TV Show with ID ${id} not found`);
+      throw createError(`TV Show with ID ${id} not found`, 404);
     }
 
     const updateData: any = {};
 
-    if (updateTVShowDto.title) updateData.title = updateTVShowDto.title;
-    if (updateTVShowDto.description)
-      updateData.description = updateTVShowDto.description;
-    if (updateTVShowDto.firstAired)
-      updateData.firstAired = new Date(updateTVShowDto.firstAired);
-    if (updateTVShowDto.totalSeasons)
-      updateData.totalSeasons = updateTVShowDto.totalSeasons;
-    if (updateTVShowDto.totalEpisodes)
-      updateData.totalEpisodes = updateTVShowDto.totalEpisodes;
-    if (updateTVShowDto.genre) updateData.genre = updateTVShowDto.genre;
-    if (updateTVShowDto.posterUrl)
-      updateData.posterUrl = updateTVShowDto.posterUrl;
-    if (updateTVShowDto.trailerUrl !== undefined)
-      updateData.trailerUrl = updateTVShowDto.trailerUrl;
-    if (updateTVShowDto.status) updateData.status = updateTVShowDto.status;
-    if (updateTVShowDto.network) updateData.network = updateTVShowDto.network;
+    if (updateTVShowData.title) updateData.title = updateTVShowData.title;
+    if (updateTVShowData.description)
+      updateData.description = updateTVShowData.description;
+    if (updateTVShowData.firstAired)
+      updateData.firstAired = new Date(updateTVShowData.firstAired);
+    if (updateTVShowData.totalSeasons)
+      updateData.totalSeasons = updateTVShowData.totalSeasons;
+    if (updateTVShowData.totalEpisodes)
+      updateData.totalEpisodes = updateTVShowData.totalEpisodes;
+    if (updateTVShowData.genre) updateData.genre = updateTVShowData.genre;
+    if (updateTVShowData.posterUrl)
+      updateData.posterUrl = updateTVShowData.posterUrl;
+    if (updateTVShowData.trailerUrl !== undefined)
+      updateData.trailerUrl = updateTVShowData.trailerUrl;
+    if (updateTVShowData.status) updateData.status = updateTVShowData.status;
+    if (updateTVShowData.network) updateData.network = updateTVShowData.network;
 
     const tvShow = await this.prisma.tVShow.update({
       where: { id },
@@ -109,7 +132,7 @@ export class TVShowService {
     });
 
     if (!existingTVShow) {
-      throw new NotFoundException(`TV Show with ID ${id} not found`);
+      throw createError(`TV Show with ID ${id} not found`, 404);
     }
 
     await this.prisma.tVShow.delete({

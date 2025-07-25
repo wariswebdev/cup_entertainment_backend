@@ -1,23 +1,42 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
+import { createError } from '../middleware/error.middleware';
 
-@Injectable()
+export interface CreateMovieData {
+  title: string;
+  description: string;
+  releaseDate: string;
+  duration: number;
+  genre: string[];
+  posterUrl: string;
+  trailerUrl?: string;
+  videoUrl: string;
+}
+
+export interface UpdateMovieData {
+  title?: string;
+  description?: string;
+  releaseDate?: string;
+  duration?: number;
+  genre?: string[];
+  posterUrl?: string;
+  trailerUrl?: string;
+  videoUrl?: string;
+}
+
 export class MovieService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createMovieDto: CreateMovieDto) {
+  async create(createMovieData: CreateMovieData) {
     const movie = await this.prisma.movie.create({
       data: {
-        title: createMovieDto.title,
-        description: createMovieDto.description,
-        releaseDate: new Date(createMovieDto.releaseDate),
-        duration: createMovieDto.duration,
-        genre: createMovieDto.genre,
-        posterUrl: createMovieDto.posterUrl,
-        trailerUrl: createMovieDto.trailerUrl,
-        videoUrl: createMovieDto.videoUrl,
+        title: createMovieData.title,
+        description: createMovieData.description,
+        releaseDate: new Date(createMovieData.releaseDate),
+        duration: createMovieData.duration,
+        genre: createMovieData.genre,
+        posterUrl: createMovieData.posterUrl,
+        trailerUrl: createMovieData.trailerUrl,
+        videoUrl: createMovieData.videoUrl,
       },
     });
 
@@ -49,7 +68,7 @@ export class MovieService {
     });
 
     if (!movie) {
-      throw new NotFoundException(`Movie with ID ${id} not found`);
+      throw createError(`Movie with ID ${id} not found`, 404);
     }
 
     return {
@@ -59,30 +78,32 @@ export class MovieService {
     };
   }
 
-  async update(id: number, updateMovieDto: UpdateMovieDto) {
+  async update(id: number, updateMovieData: UpdateMovieData) {
     // Check if movie exists
     const existingMovie = await this.prisma.movie.findUnique({
       where: { id },
     });
 
     if (!existingMovie) {
-      throw new NotFoundException(`Movie with ID ${id} not found`);
+      throw createError(`Movie with ID ${id} not found`, 404);
     }
 
     const updateData: any = {};
 
-    if (updateMovieDto.title) updateData.title = updateMovieDto.title;
-    if (updateMovieDto.description)
-      updateData.description = updateMovieDto.description;
-    if (updateMovieDto.releaseDate)
-      updateData.releaseDate = new Date(updateMovieDto.releaseDate);
-    if (updateMovieDto.duration) updateData.duration = updateMovieDto.duration;
-    if (updateMovieDto.genre) updateData.genre = updateMovieDto.genre;
-    if (updateMovieDto.posterUrl)
-      updateData.posterUrl = updateMovieDto.posterUrl;
-    if (updateMovieDto.trailerUrl !== undefined)
-      updateData.trailerUrl = updateMovieDto.trailerUrl;
-    if (updateMovieDto.videoUrl) updateData.videoUrl = updateMovieDto.videoUrl;
+    if (updateMovieData.title) updateData.title = updateMovieData.title;
+    if (updateMovieData.description)
+      updateData.description = updateMovieData.description;
+    if (updateMovieData.releaseDate)
+      updateData.releaseDate = new Date(updateMovieData.releaseDate);
+    if (updateMovieData.duration)
+      updateData.duration = updateMovieData.duration;
+    if (updateMovieData.genre) updateData.genre = updateMovieData.genre;
+    if (updateMovieData.posterUrl)
+      updateData.posterUrl = updateMovieData.posterUrl;
+    if (updateMovieData.trailerUrl !== undefined)
+      updateData.trailerUrl = updateMovieData.trailerUrl;
+    if (updateMovieData.videoUrl)
+      updateData.videoUrl = updateMovieData.videoUrl;
 
     const movie = await this.prisma.movie.update({
       where: { id },
@@ -103,7 +124,7 @@ export class MovieService {
     });
 
     if (!existingMovie) {
-      throw new NotFoundException(`Movie with ID ${id} not found`);
+      throw createError(`Movie with ID ${id} not found`, 404);
     }
 
     await this.prisma.movie.delete({

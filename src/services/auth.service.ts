@@ -1,28 +1,30 @@
-import {
-  Injectable,
-  ConflictException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
-import { SignupDto } from './dto/signup.dto';
-import { LoginDto } from './dto/login.dto';
+import { createError } from '../middleware/error.middleware';
 
-@Injectable()
+export interface SignupData {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
 export class AuthService {
-  constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   private generateToken(user: { id: number; email: string }): string {
     const payload = { sub: user.id, email: user.email };
-    return this.jwtService.sign(payload);
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    return jwt.sign(payload, secret, { expiresIn: '1d' });
   }
 
-  async signup(signupDto: SignupDto) {
-    const { fullName, email, password } = signupDto;
+  async signup(signupData: SignupData) {
+    const { fullName, email, password } = signupData;
 
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
@@ -30,7 +32,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw createError('User with this email already exists', 409);
     }
 
     // Hash password
@@ -62,8 +64,8 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+  async login(loginData: LoginData) {
+    const { email, password } = loginData;
 
     // Find user by email
     const user = await this.prisma.user.findUnique({
@@ -71,14 +73,14 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw createError('Invalid credentials', 401);
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw createError('Invalid credentials', 401);
     }
 
     // Generate JWT token
