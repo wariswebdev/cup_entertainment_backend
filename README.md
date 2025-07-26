@@ -4,14 +4,18 @@ A RESTful API backend for a movie and TV show entertainment platform built with 
 
 ## Features
 
-- **Authentication**: User registration and login with JWT tokens
+- **Secure Authentication**: Two-step signup process with OTP email verification
+- **User Registration**: Email verification required before account creation
+- **User Login**: JWT-based authentication with bcrypt password hashing
 - **Movies Management**: CRUD operations for movies
 - **TV Shows Management**: CRUD operations for TV shows
 - **Search**: Search functionality for movies and TV shows by title
 - **Filter**: Filter content by genre
 - **Database**: PostgreSQL with Prisma ORM
+- **Email Service**: Automated OTP delivery via SMTP
 - **Validation**: Request validation using express-validator
 - **Error Handling**: Centralized error handling middleware
+- **Rate Limiting**: OTP request throttling to prevent spam
 
 ## Tech Stack
 
@@ -64,6 +68,12 @@ A RESTful API backend for a movie and TV show entertainment platform built with 
 
    # Node Environment
    NODE_ENV=development
+
+   # Email Configuration (for OTP)
+   SMTP_HOST="smtp.gmail.com"
+   SMTP_PORT=587
+   SMTP_USER="your-email@gmail.com"
+   SMTP_PASS="your-app-password"
    ```
 
 4. **Database Setup**
@@ -95,7 +105,10 @@ A RESTful API backend for a movie and TV show entertainment platform built with 
 
 ### Authentication
 
-- `POST /auth/signup` - Register a new user
+- `POST /auth/send-otp` - Send OTP for email verification
+- `POST /auth/verify-otp` - Verify OTP code
+- `POST /auth/resend-otp` - Resend OTP (rate limited)
+- `POST /auth/signup` - Complete user registration (requires verified OTP)
 - `POST /auth/login` - Login user
 
 ### Movies

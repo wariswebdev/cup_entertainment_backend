@@ -7,6 +7,7 @@ export interface SignupData {
   fullName: string;
   email: string;
   password: string;
+  otp: string;
 }
 
 export interface LoginData {
@@ -24,7 +25,7 @@ export class AuthService {
   }
 
   async signup(signupData: SignupData) {
-    const { fullName, email, password } = signupData;
+    const { fullName, email, password, otp } = signupData;
 
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
@@ -33,6 +34,29 @@ export class AuthService {
 
     if (existingUser) {
       throw createError('User with this email already exists', 409);
+    }
+
+    // Verify OTP
+    const otpRecord = await this.prisma.oTP.findFirst({
+      where: {
+        email,
+        otp,
+        type: 'signup',
+        verified: true,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (!otpRecord) {
+      throw createError(
+        'Invalid or expired OTP. Please verify your email first.',
+        400,
+      );
     }
 
     // Hash password
@@ -51,6 +75,11 @@ export class AuthService {
         email: true,
         createdAt: true,
       },
+    });
+
+    // Clean up the used OTP
+    await this.prisma.oTP.delete({
+      where: { id: otpRecord.id },
     });
 
     // Generate JWT token

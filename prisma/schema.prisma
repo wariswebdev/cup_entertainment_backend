@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -50,4 +51,17 @@ model TVShow {
   network       String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  email     String
+  otp       String
+  type      String   // 'signup', 'password_reset'
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email, type])
 }

@@ -29,12 +29,46 @@ export const validateSignup = [
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be exactly 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
   handleValidationErrors,
 ];
 
 export const validateLogin = [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').notEmpty().withMessage('Password is required'),
+  handleValidationErrors,
+];
+
+export const validateSendOTP = [
+  body('email').isEmail().withMessage('Please provide a valid email'),
+  body('type')
+    .isIn(['signup', 'password_reset'])
+    .withMessage('Type must be either signup or password_reset'),
+  handleValidationErrors,
+];
+
+export const validateVerifyOTP = [
+  body('email').isEmail().withMessage('Please provide a valid email'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be exactly 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
+  body('type')
+    .isIn(['signup', 'password_reset'])
+    .withMessage('Type must be either signup or password_reset'),
+  handleValidationErrors,
+];
+
+export const validateResendOTP = [
+  body('email').isEmail().withMessage('Please provide a valid email'),
+  body('type')
+    .isIn(['signup', 'password_reset'])
+    .withMessage('Type must be either signup or password_reset'),
   handleValidationErrors,
 ];
 
